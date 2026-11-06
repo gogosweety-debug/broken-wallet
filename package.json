@@ -1,0 +1,8 @@
+{
+  "name": "broke-wallet",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html main.jsx App.jsx dist/"
+  }
+}
