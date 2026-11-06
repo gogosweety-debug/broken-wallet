@@ -9,37 +9,29 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 載入 Lucide 圖示 -->
-  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect } = React;
 
-    // 定義完整 App 元件
     function App() {
-      // 讀取/儲存 LocalStorage 資料
       const [items, setItems] = useState(() => {
         const saved = localStorage.getItem('wallet_memo_items');
         return saved ? JSON.parse(saved) : [
-          { id: 1, name: '日版動漫公仔', price: 150, currency: 'RMB', status: 'unpaid', shippingType: 'express', trackingNumber: '', warehouse: '', date: new Date().toISOString().split('T')[0] },
-          { id: 2, name: '痛包周邊 badge', price: 45, currency: 'RMB', status: 'shipped', shippingType: 'express', trackingNumber: 'SF12345678', warehouse: '官方集運倉', date: new Date().toISOString().split('T')[0] }
+          { id: 1, name: '日版動漫公仔', price: 150, currency: 'RMB', status: 'unpaid', shippingType: 'express', trackingNumber: '', warehouse: '官方集運倉', date: new Date().toISOString().split('T')[0] },
+          { id: 2, name: '痛包周邊 badge', price: 45, currency: 'RMB', status: 'shipped', shippingType: 'express', trackingNumber: 'SF12345678', warehouse: '巧巧郎集運', date: new Date().toISOString().split('T')[0] }
         ];
       });
 
-      const [rate, setRate] = useState(() => {
-        return parseFloat(localStorage.getItem('wallet_memo_rate')) || 4.5;
-      });
-
-      const [tab, setTab] = useState('unpaid'); // unpaid, paid, history
+      const [rate, setRate] = useState(() => parseFloat(localStorage.getItem('wallet_memo_rate')) || 4.5);
+      const [tab, setTab] = useState('unpaid'); 
       const [banner, setBanner] = useState(() => localStorage.getItem('wallet_memo_banner') || '');
       const [showRateModal, setShowRateModal] = useState(false);
       const [showAddModal, setShowAddModal] = useState(false);
       const [editingItem, setEditingItem] = useState(null);
 
-      // 表單 State
       const [formData, setFormData] = useState({
         name: '', price: '', isUnknownPrice: false, currency: 'RMB',
         shippingType: 'express', trackingNumber: '', warehouse: '',
@@ -54,7 +46,6 @@
         localStorage.setItem('wallet_memo_rate', rate.toString());
       }, [rate]);
 
-      // Banner 上傳處理
       const handleBannerUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -67,12 +58,10 @@
         }
       };
 
-      // 新增/修改邏輯
       const handleSaveItem = () => {
         if (!formData.name) return;
         let finalStatus = editingItem ? editingItem.status : 'unpaid';
         
-        // 若填寫單號，狀態自動變更為已發貨
         if (formData.shippingType === 'express' && formData.trackingNumber.trim() !== '') {
           if (finalStatus === 'unpaid' || finalStatus === 'unshipped') {
             finalStatus = 'shipped';
@@ -102,6 +91,14 @@
         resetForm();
       };
 
+      const handleDeleteItem = (id) => {
+        if (confirm('確定要刪除這個品項嗎？')) {
+          setItems(items.filter(i => i.id !== id));
+          setShowAddModal(false);
+          setEditingItem(null);
+        }
+      };
+
       const resetForm = () => {
         setFormData({
           name: '', price: '', isUnknownPrice: false, currency: 'RMB',
@@ -125,12 +122,10 @@
         setShowAddModal(true);
       };
 
-      // 切換狀態（例如：付款、結案）
       const updateStatus = (id, newStatus) => {
         setItems(items.map(i => i.id === id ? { ...i, status: newStatus } : i));
       };
 
-      // 匯出 Excel (CSV 帶 BOM)
       const exportToExcel = () => {
         let csv = '\uFEFF物品名稱,金額,幣別,狀態,運送方式,單號,集運倉,日期\n';
         items.forEach(i => {
@@ -144,14 +139,13 @@
         a.click();
       };
 
-      // 篩選品項
       const unpaidItems = items.filter(i => i.status === 'unpaid');
       const paidItems = items.filter(i => i.status === 'shipped' || i.status === 'unshipped');
       const historyItems = items.filter(i => i.status === 'completed');
 
       return (
         <div className="max-w-md mx-auto min-h-screen bg-white pb-20 shadow-lg relative">
-          {/* Banner 區域 (滿版直角) */}
+          {/* Banner 區域 */}
           <div className="relative w-full h-44 bg-gradient-to-r from-pink-400 to-purple-500 overflow-hidden">
             {banner ? (
               <img src={banner} className="w-full h-full object-cover" alt="Banner" />
@@ -167,7 +161,7 @@
             </label>
           </div>
 
-          {/* 頂部功能按鈕與匯率 */}
+          {/* 頂部按鈕 */}
           <div className="p-4 flex items-center justify-between border-b bg-gray-50">
             <button onClick={() => setShowRateModal(true)} className="text-xs bg-white border px-3 py-1.5 rounded-full shadow-sm font-medium">
               💱 RMB 匯率: <span className="text-pink-600 font-bold">{rate}</span>
@@ -182,14 +176,12 @@
             </div>
           </div>
 
-          {/* 主內容區域 */}
+          {/* 內容區塊 */}
           <div className="p-4">
-            {/* 未付款頁籤 */}
+            {/* 未付款頁面 */}
             {tab === 'unpaid' && (
               <div>
-                <h2 className="text-sm font-bold text-gray-500 mb-3 flex items-center justify-between">
-                  <span>🛒 未付款項目 ({unpaidItems.length})</span>
-                </h2>
+                <h2 className="text-sm font-bold text-gray-500 mb-3">🛒 未付款項目 ({unpaidItems.length})</h2>
                 {unpaidItems.length === 0 ? (
                   <p className="text-center text-gray-400 py-10 text-sm">目前沒有未付款的願望～</p>
                 ) : (
@@ -212,7 +204,7 @@
               </div>
             )}
 
-            {/* 已付款頁籤 */}
+            {/* 已付款頁面 */}
             {tab === 'paid' && (
               <div>
                 <h2 className="text-sm font-bold text-gray-500 mb-3">📦 已付款項目 ({paidItems.length})</h2>
@@ -224,107 +216,4 @@
                       <div key={item.id} className="p-3 border rounded-xl bg-white shadow-sm flex items-center justify-between">
                         <div onClick={() => openEdit(item)} className="flex-1 cursor-pointer">
                           <div className="font-bold text-gray-800">{item.name}</div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {item.shippingType === 'express' ? `單號: ${item.trackingNumber || '未填寫'} (${item.warehouse || '未選擇倉'})` : '🤝 面交 / 親提'}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-0.5">日期: {item.date}</div>
-                        </div>
-                        <button onClick={() => updateStatus(item.id, 'completed')} className="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg font-bold">
-                          簽收結案
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 歷史頁籤 */}
-            {tab === 'history' && (
-              <div>
-                <h2 className="text-sm font-bold text-gray-500 mb-3">🎉 歷史紀錄 ({historyItems.length})</h2>
-                {historyItems.map(item => (
-                  <div key={item.id} className="p-3 border rounded-xl bg-gray-50 mb-2 flex justify-between items-center opacity-70">
-                    <div>
-                      <div className="font-bold line-through text-gray-600">{item.name}</div>
-                      <div className="text-xs text-gray-400">已結案 • {item.date}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 底部導覽欄 */}
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t flex justify-around py-2.5 z-10">
-            <button onClick={() => setTab('unpaid')} className={`text-xs font-bold ${tab === 'unpaid' ? 'text-pink-500' : 'text-gray-400'}`}>
-              未付款 ({unpaidItems.length})
-            </button>
-            <button onClick={() => setTab('paid')} className={`text-xs font-bold ${tab === 'paid' ? 'text-pink-500' : 'text-gray-400'}`}>
-              已付款 ({paidItems.length})
-            </button>
-            <button onClick={() => setTab('history')} className={`text-xs font-bold ${tab === 'history' ? 'text-pink-500' : 'text-gray-400'}`}>
-              歷史
-            </button>
-          </div>
-
-          {/* 新增/編輯 Modal */}
-          {showAddModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white w-full max-w-sm rounded-2xl p-5 shadow-xl space-y-4">
-                <h3 className="font-bold text-lg">{editingItem ? '編輯品項' : '買買買 💸'}</h3>
-                <div>
-                  <label className="text-xs text-gray-500 font-bold">物品名稱</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full border p-2 rounded-lg text-sm mt-1" placeholder="請輸入商品名稱" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 font-bold">日期</label>
-                  <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full border p-2 rounded-lg text-sm mt-1" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <label className="text-xs text-gray-500 font-bold">金額</label>
-                    <input type="number" disabled={formData.isUnknownPrice} value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} className="w-full border p-2 rounded-lg text-sm mt-1 disabled:bg-gray-100" placeholder="0" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 font-bold">幣別</label>
-                    <select value={formData.currency} onChange={e => setFormData({ ...formData, currency: e.target.value })} className="w-full border p-2 rounded-lg text-sm mt-1">
-                      <option value="RMB">RMB (¥)</option>
-                      <option value="TWD">TWD ($)</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="unk" checked={formData.isUnknownPrice} onChange={e => setFormData({ ...formData, isUnknownPrice: e.target.checked })} />
-                  <label htmlFor="unk" className="text-xs text-gray-600">金額未知待補</label>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 font-bold">貨運單號 (如有填入將自動改為已發貨)</label>
-                  <input type="text" value={formData.trackingNumber} onChange={e => setFormData({ ...formData, trackingNumber: e.target.value })} className="w-full border p-2 rounded-lg text-sm mt-1" placeholder="輸入快遞單號" />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button onClick={() => setShowAddModal(false)} className="px-4 py-2 border text-gray-600 text-xs rounded-xl">取消</button>
-                  <button onClick={handleSaveItem} className="px-4 py-2 bg-pink-500 text-white text-xs font-bold rounded-xl">儲存</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 匯率彈窗 */}
-          {showRateModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white w-full max-w-xs rounded-2xl p-5 shadow-xl text-center space-y-4">
-                <h3 className="font-bold">設定 RMB 匯率</h3>
-                <input type="number" step="0.01" value={rate} onChange={e => setRate(parseFloat(e.target.value) || 0)} className="w-full border p-2 rounded-lg text-center font-bold text-lg" />
-                <button onClick={() => setShowRateModal(false)} className="w-full py-2 bg-pink-500 text-white text-xs font-bold rounded-xl">完成</button>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-  </script>
-</body>
-</html>
+                          <div
