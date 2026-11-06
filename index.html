@@ -4,17 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>破荷包備忘 💸</title>
-  <!-- 載入 React & Tailwind CSS -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
   <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect } = React;
+  <!-- 採用原生 React ESM 模組，無需 Babel 編譯，確保絕不空白 -->
+  <script type="module">
+    import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+    import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
 
     function App() {
       const [items, setItems] = useState(() => {
@@ -117,103 +115,4 @@
           shippingType: item.shippingType || 'express',
           trackingNumber: item.trackingNumber || '',
           warehouse: item.warehouse || '',
-          date: item.date || new Date().toISOString().split('T')[0]
-        });
-        setShowAddModal(true);
-      };
-
-      const updateStatus = (id, newStatus) => {
-        setItems(items.map(i => i.id === id ? { ...i, status: newStatus } : i));
-      };
-
-      const exportToExcel = () => {
-        let csv = '\uFEFF物品名稱,金額,幣別,狀態,運送方式,單號,集運倉,日期\n';
-        items.forEach(i => {
-          csv += `"${i.name}","${i.price}","${i.currency}","${i.status}","${i.shippingType}","${i.trackingNumber}","${i.warehouse}","${i.date}"\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `破荷包備忘_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-      };
-
-      const unpaidItems = items.filter(i => i.status === 'unpaid');
-      const paidItems = items.filter(i => i.status === 'shipped' || i.status === 'unshipped');
-      const historyItems = items.filter(i => i.status === 'completed');
-
-      return (
-        <div className="max-w-md mx-auto min-h-screen bg-white pb-20 shadow-lg relative">
-          {/* Banner 區域 */}
-          <div className="relative w-full h-44 bg-gradient-to-r from-pink-400 to-purple-500 overflow-hidden">
-            {banner ? (
-              <img src={banner} className="w-full h-full object-cover" alt="Banner" />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-white">
-                <h1 className="text-2xl font-extrabold tracking-wider">💸 破荷包備忘</h1>
-                <p className="text-xs opacity-80 mt-1">購物與物流管理清單</p>
-              </div>
-            )}
-            <label className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded cursor-pointer">
-              換橫幅
-              <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
-            </label>
-          </div>
-
-          {/* 頂部按鈕 */}
-          <div className="p-4 flex items-center justify-between border-b bg-gray-50">
-            <button onClick={() => setShowRateModal(true)} className="text-xs bg-white border px-3 py-1.5 rounded-full shadow-sm font-medium">
-              💱 RMB 匯率: <span className="text-pink-600 font-bold">{rate}</span>
-            </button>
-            <div className="flex gap-2">
-              <button onClick={exportToExcel} className="text-xs bg-green-600 text-white px-3 py-1.5 rounded-full font-medium shadow-sm">
-                📥 下載 Excel
-              </button>
-              <button onClick={() => { resetForm(); setEditingItem(null); setShowAddModal(true); }} className="text-xs bg-pink-500 text-white px-4 py-1.5 rounded-full font-bold shadow-sm">
-                + 買買買
-              </button>
-            </div>
-          </div>
-
-          {/* 內容區塊 */}
-          <div className="p-4">
-            {/* 未付款頁面 */}
-            {tab === 'unpaid' && (
-              <div>
-                <h2 className="text-sm font-bold text-gray-500 mb-3">🛒 未付款項目 ({unpaidItems.length})</h2>
-                {unpaidItems.length === 0 ? (
-                  <p className="text-center text-gray-400 py-10 text-sm">目前沒有未付款的願望～</p>
-                ) : (
-                  <div className="space-y-3">
-                    {unpaidItems.map(item => (
-                      <div key={item.id} className="p-3 border rounded-xl flex items-center justify-between bg-white shadow-sm">
-                        <div onClick={() => openEdit(item)} className="flex-1 cursor-pointer">
-                          <div className="font-bold text-gray-800">{item.name}</div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            日期: {item.date} | 金額: <span className="text-pink-600 font-bold">{item.price === '未知' ? '未知待補' : `${item.currency === 'RMB' ? '¥' : '$'}${item.price}`}</span>
-                          </div>
-                        </div>
-                        <button onClick={() => updateStatus(item.id, 'unshipped')} className="text-xs bg-pink-100 text-pink-600 px-3 py-1.5 rounded-lg font-bold">
-                          轉已付款
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 已付款頁面 */}
-            {tab === 'paid' && (
-              <div>
-                <h2 className="text-sm font-bold text-gray-500 mb-3">📦 已付款項目 ({paidItems.length})</h2>
-                {paidItems.length === 0 ? (
-                  <p className="text-center text-gray-400 py-10 text-sm">無已付款商品～</p>
-                ) : (
-                  <div className="space-y-3">
-                    {paidItems.map(item => (
-                      <div key={item.id} className="p-3 border rounded-xl bg-white shadow-sm flex items-center justify-between">
-                        <div onClick={() => openEdit(item)} className="flex-1 cursor-pointer">
-                          <div className="font-bold text-gray-800">{item.name}</div>
-                          <div
+          date: item.date || new Date().toISOString().
