@@ -26,7 +26,7 @@
       const [rate, setRate] = useState(() => parseFloat(localStorage.getItem('wallet_memo_rate')) || 4.5);
       const [tab, setTab] = useState('unpaid'); 
       
-      // 預設 Banner 設為您剛剛上傳的圖片網址
+      // 預設 Banner 設為您專案中的圖片網址
       const defaultImageUrl = "https://raw.githubusercontent.com/gogosweety-debug/broken-wallet/refs/heads/main/IMG_8329.jpeg";
       
       const [banner, setBanner] = useState(() => localStorage.getItem('wallet_memo_banner') || defaultImageUrl);
@@ -149,13 +149,20 @@
 
       return (
         <div className="max-w-md mx-auto min-h-screen bg-white pb-20 shadow-lg relative">
-          {/* Banner 區域 (顯示您上傳的專案圖片) */}
+          {/* Banner 區域 */}
           <div className="relative w-full h-44 bg-gradient-to-r from-pink-400 to-purple-500 overflow-hidden">
             <img src={banner} className="w-full h-full object-cover" alt="Banner" onError={(e) => e.target.style.display = 'none'} />
             <label className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded cursor-pointer">
               換橫幅
               <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
             </label>
+          </div>
+
+          {/* 溫馨提醒橫幅 */}
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center">
+            <p className="text-[11px] text-amber-800 font-medium">
+              💡 破荷包備忘錄。清除網頁快取資料會不見，記得定期點擊「下載 Excel」備份～
+            </p>
           </div>
 
           {/* 頂部按鈕區 */}
